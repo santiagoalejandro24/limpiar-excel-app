@@ -37,18 +37,18 @@ if archivo:
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df_limpio.to_excel(writer, index=False, sheet_name='Limpio')
 
-        # Ajustar anchos de columna con más espacio
+        # Ajuste de anchos de columna
         workbook  = writer.book
         worksheet = writer.sheets['Limpio']
 
         col_widths = {
-            "Guia/PLAN": 18,
-            "Origen": 25,
-            "Destino": 25,
+            "Guia/PLAN": 14,
+            "Origen": 18,
+            "Destino": 18,
             "Empresa": 28,
             "Identificador": 22,
             "Nombre/Descripcion": 35,
-            "Proyecto": 30,
+            "Proyecto": 22,
         }
 
         for idx, col in enumerate(df_limpio.columns):
