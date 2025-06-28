@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Limpiar Excel - Ingresos/Egresos")
 st.title("📊 Limpiar archivo Excel de Ingresos/Egresos")
@@ -26,13 +26,11 @@ if archivo:
     df_limpio = df[orden_columnas].copy()
     df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
-    # Hoja Egresos: Origen contiene Batidero o Destino contiene Guandacol
     df_egresos = df_limpio[
         (df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)) |
         (df_limpio["Destino"].astype(str).str.contains("Guandacol", case=False, na=False))
     ].copy()
 
-    # Hoja Ingresos: Origen NO contiene Batidero y Destino es Batidero o La Brea
     df_ingresos = df_limpio[
         (~df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)) &
         (df_limpio["Destino"].astype(str).str.strip().str.lower().isin(["batidero", "la brea"]))
@@ -41,15 +39,9 @@ if archivo:
     df_ingresos = df_ingresos.sort_values(by="Origen", ascending=True)
     df_egresos = df_egresos.sort_values(by="Origen", ascending=True)
 
-    # ---------------------------------
-    # ✅ RESUMEN CORREGIDO
-    # ---------------------------------
-
-    # Ingresos: analizar por ORIGEN
     ingresos_chile = df_ingresos[df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
     ingresos_arg = df_ingresos[~df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
 
-    # Egresos: analizar por DESTINO
     egresos_chile = df_egresos[df_egresos["Destino"].astype(str).str.lower().str.contains("chile")]
     egresos_arg = df_egresos[~df_egresos["Destino"].astype(str).str.lower().str.contains("chile")]
 
@@ -59,9 +51,6 @@ if archivo:
         "Egresos": [len(egresos_chile), len(egresos_arg)]
     })
 
-    # ---------------------------------
-    # ✨ CREAR ARCHIVO EXCEL
-    # ---------------------------------
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df_ingresos.to_excel(writer, index=False, sheet_name='Ingresos')
@@ -86,7 +75,6 @@ if archivo:
             "Proyecto": 13,
         }
 
-        # Aplicar formato a Ingresos y Egresos
         for sheet_name, df_hoja in [("Ingresos", df_ingresos), ("Egresos", df_egresos)]:
             ws = writer.sheets[sheet_name]
             for idx, col in enumerate(df_hoja.columns):
@@ -96,7 +84,6 @@ if archivo:
                 for j in range(len(df_hoja.columns)):
                     ws.write(i + 1, j, df_hoja.iat[i, j], border_format)
 
-        # Formato para hoja Resumen
         ws_resumen = writer.sheets["Resumen"]
         ws_resumen.set_column(0, 0, 14)
         ws_resumen.set_column(1, 2, 15)
@@ -107,8 +94,10 @@ if archivo:
                 ws_resumen.write(row_idx + 1, col_idx, df_resumen.iat[row_idx, col_idx], border_format)
 
     output.seek(0)
-    fecha_actual = datetime.now().strftime("%d-%m-%Y")
-    nombre_archivo = f"INGRESOS-EGRESOS {fecha_actual}.xlsx"
+
+    # Fecha del día siguiente para el nombre del archivo
+    fecha_siguiente = (datetime.now() + timedelta(days=1)).strftime("%d-%m-%Y")
+    nombre_archivo = f"INGRESOS-EGRESOS {fecha_siguiente}.xlsx"
 
     st.success("✅ Archivo procesado correctamente. Podés descargarlo abajo.")
     st.download_button(
@@ -116,4 +105,4 @@ if archivo:
         data=output,
         file_name=nombre_archivo,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+    )
