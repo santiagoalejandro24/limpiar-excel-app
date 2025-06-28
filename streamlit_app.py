@@ -59,7 +59,11 @@ if archivo:
 
         workbook = writer.book
         border_format = workbook.add_format({'border': 1})
-        header_format = workbook.add_format({'bold': True, 'border': 1})
+        header_format = workbook.add_format({
+            'bold': True,
+            'border': 1,
+            'bg_color': '#FFFF00'  # amarillo
+        })
 
         # Ajustar anchos de columnas y aplicar formatos
         for sheet_name, df_hoja in [("Ingresos", df_ingresos), ("Egresos", df_egresos)]:
@@ -77,7 +81,7 @@ if archivo:
                 width = col_widths.get(col, 20)
                 worksheet.set_column(idx, idx, width)
 
-            # Escribir encabezados en negrita con bordes
+            # Escribir encabezados en negrita con fondo amarillo y bordes
             for col_idx, col_name in enumerate(df_hoja.columns):
                 worksheet.write(0, col_idx, col_name, header_format)
 
