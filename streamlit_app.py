@@ -57,8 +57,10 @@ if archivo:
         df_ingresos.to_excel(writer, index=False, sheet_name='Ingresos')
         df_egresos.to_excel(writer, index=False, sheet_name='Egresos')
 
-        # Ajustar anchos de columnas en ambas hojas según pedido
         workbook = writer.book
+        border_format = workbook.add_format({'border': 1})
+
+        # Ajustar anchos de columnas y aplicar bordes
         for sheet_name, df_hoja in [("Ingresos", df_ingresos), ("Egresos", df_egresos)]:
             worksheet = writer.sheets[sheet_name]
             col_widths = {
@@ -73,6 +75,13 @@ if archivo:
             for idx, col in enumerate(df_hoja.columns):
                 width = col_widths.get(col, 20)
                 worksheet.set_column(idx, idx, width)
+
+            # Aplicar bordes a todas las celdas con datos
+            num_filas = len(df_hoja)
+            num_columnas = len(df_hoja.columns)
+            for fila in range(num_filas + 1):  # +1 para incluir encabezado
+                for col in range(num_columnas):
+                    worksheet.write(fila, col, df_hoja.columns[col] if fila == 0 else df_hoja.iloc[fila - 1, col], border_format)
 
     output.seek(0)
 
