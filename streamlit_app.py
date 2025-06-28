@@ -23,17 +23,31 @@ if archivo:
     # Leemos el archivo
     df = pd.read_excel(archivo)
 
+    # Validar columnas
+    faltantes = [col for col in columnas_a_conservar if col not in df.columns]
+    if faltantes:
+        st.error(f"Faltan columnas en el archivo original: {', '.join(faltantes)}")
+        st.stop()
+
     # Filtramos solo las columnas necesarias
     df_limpio = df[columnas_a_conservar].copy()
 
     # Eliminamos filas donde Identificador contenga letras
     df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
-    # Dividir en Egresos (Origen contiene 'Batidero') e Ingresos (resto)
-    df_egresos = df_limpio[df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)].copy()
-    df_ingresos = df_limpio[~df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)].copy()
+    # Egresos: Origen contiene "Batidero" o Destino contiene "Guandacol"
+    df_egresos = df_limpio[
+        (df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)) |
+        (df_limpio["Destino"].astype(str).str.contains("Guandacol", case=False, na=False))
+    ].copy()
 
-    # Ordenar cada hoja por Origen
+    # Ingresos: Origen NO contiene "Batidero" y Destino es "Batidero" o "La Brea"
+    df_ingresos = df_limpio[
+        (~df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)) &
+        (df_limpio["Destino"].astype(str).str.strip().str.lower().isin(["batidero", "la brea"]))
+    ].copy()
+
+    # Ordenar por Origen
     df_ingresos = df_ingresos.sort_values(by="Origen", ascending=True)
     df_egresos = df_egresos.sort_values(by="Origen", ascending=True)
 
