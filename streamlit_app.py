@@ -18,7 +18,7 @@ if archivo:
     df = pd.read_excel(archivo)
 
     # Filtramos solo las columnas necesarias
-    df_limpio = df_limpio.sort_values(by=['Empresa', 'Nombre/Descripcion'], ascending=[True, False])
+    df_limpio.to_excel(writer, index=False)
     # --- ¡NUEVAS LÍNEAS PARA ORDENAR! ---
     # RECORDÁ: Necesitas decidir qué columna(s) usar para ordenar.
     #
