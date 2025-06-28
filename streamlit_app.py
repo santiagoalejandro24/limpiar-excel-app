@@ -19,7 +19,6 @@ if archivo:
 
     # Filtramos solo las columnas necesarias
     df_limpio = df_limpio.sort_values(by=['Empresa', 'Nombre/Descripcion'], ascending=[True, False])
-
     # --- ¡NUEVAS LÍNEAS PARA ORDENAR! ---
     # RECORDÁ: Necesitas decidir qué columna(s) usar para ordenar.
     #
