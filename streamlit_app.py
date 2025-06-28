@@ -26,14 +26,8 @@ if archivo:
     # Filtramos solo las columnas necesarias
     df_limpio = df[columnas_a_conservar].copy()
 
-    # Intentamos convertir "Identificador" a número
-    df_limpio["Identificador_num"] = pd.to_numeric(df_limpio["Identificador"], errors="coerce")
-
-    # Ordenamos: primero los numéricos de mayor a menor, luego los que contienen texto
-    df_limpio = df_limpio.sort_values(by="Identificador_num", ascending=False, na_position='last')
-
-    # Quitamos la columna auxiliar
-    df_limpio = df_limpio.drop(columns=["Identificador_num"])
+    # Ordenamos por la columna "Origen" alfabéticamente
+    df_limpio = df_limpio.sort_values(by="Origen", ascending=True)
 
     # Crear archivo Excel en memoria
     output = BytesIO()
