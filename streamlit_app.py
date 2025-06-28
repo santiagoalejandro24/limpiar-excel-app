@@ -8,7 +8,7 @@ st.set_page_config(page_title="Limpiar Excel - Ingresos/Egresos")
 
 # Título y descripción
 st.title("📊 Limpiar archivo Excel de Ingresos/Egresos")
-st.write("Subí tu archivo original para generar uno limpio, con las columnas necesarias.")
+st.write("Subí tu archivo original para generar uno limpio, separado en hojas de Ingresos y Egresos.")
 
 # Subida del archivo
 archivo = st.file_uploader("📤 Subí el archivo original Excel", type=[".xlsx"])
@@ -29,42 +29,47 @@ if archivo:
     # Eliminamos filas donde Identificador contenga letras
     df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
-    # Ordenamos por la columna "Origen" alfabéticamente
-    df_limpio = df_limpio.sort_values(by="Origen", ascending=True)
+    # Dividir en Egresos (Origen contiene 'Batidero') e Ingresos (resto)
+    df_egresos = df_limpio[df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)].copy()
+    df_ingresos = df_limpio[~df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)].copy()
 
-    # Crear archivo Excel en memoria
+    # Ordenar cada hoja por Origen
+    df_ingresos = df_ingresos.sort_values(by="Origen", ascending=True)
+    df_egresos = df_egresos.sort_values(by="Origen", ascending=True)
+
+    # Crear archivo Excel con dos hojas
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df_limpio.to_excel(writer, index=False, sheet_name='Limpio')
+        df_ingresos.to_excel(writer, index=False, sheet_name='Ingresos')
+        df_egresos.to_excel(writer, index=False, sheet_name='Egresos')
 
-        # Ajuste de anchos de columna
-        workbook  = writer.book
-        worksheet = writer.sheets['Limpio']
-
-        col_widths = {
-            "Guia/PLAN": 14,
-            "Origen": 18,
-            "Destino": 18,
-            "Empresa": 28,
-            "Identificador": 22,
-            "Nombre/Descripcion": 35,
-            "Proyecto": 22,
-        }
-
-        for idx, col in enumerate(df_limpio.columns):
-            width = col_widths.get(col, 20)
-            worksheet.set_column(idx, idx, width)
+        # Ajustar anchos de columnas en ambas hojas
+        workbook = writer.book
+        for sheet_name, df_hoja in [("Ingresos", df_ingresos), ("Egresos", df_egresos)]:
+            worksheet = writer.sheets[sheet_name]
+            col_widths = {
+                "Guia/PLAN": 14,
+                "Origen": 18,
+                "Destino": 18,
+                "Empresa": 28,
+                "Identificador": 22,
+                "Nombre/Descripcion": 35,
+                "Proyecto": 22,
+            }
+            for idx, col in enumerate(df_hoja.columns):
+                width = col_widths.get(col, 20)
+                worksheet.set_column(idx, idx, width)
 
     output.seek(0)
 
-    # Generar nombre con fecha actual
+    # Nombre de archivo con fecha
     fecha_actual = datetime.now().strftime("%d-%m-%Y")
     nombre_archivo = f"INGRESOS-EGRESOS {fecha_actual}.xlsx"
 
-    # Mensaje de éxito y botón de descarga
+    # Botón de descarga
     st.success("✅ Archivo procesado correctamente. Podés descargarlo abajo.")
     st.download_button(
-        label="📥 Descargar archivo limpio",
+        label="📥 Descargar archivo con Ingresos y Egresos",
         data=output,
         file_name=nombre_archivo,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
