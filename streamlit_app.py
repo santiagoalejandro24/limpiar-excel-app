@@ -18,27 +18,13 @@ if archivo:
     df = pd.read_excel(archivo)
 
     # Filtramos solo las columnas necesarias
-    df_limpio.to_excel(writer, index=False)
-    # --- ¡NUEVAS LÍNEAS PARA ORDENAR! ---
-    # RECORDÁ: Necesitas decidir qué columna(s) usar para ordenar.
-    #
-    # Ejemplo:
-    # Si quieres ordenar por 'Empresa' alfabéticamente (A-Z)
-    # y luego por 'Nombre/Descripcion' de mayor a menor (Z-A), usa:
-    #
-    # df_limpio = df_limpio.sort_values(by=['Empresa', 'Nombre/Descripcion'], ascending=[True, False])
-    #
-    # Si solo quieres ordenar por una columna, por ejemplo, 'Proyecto' de A-Z:
-    # df_limpio = df_limpio.sort_values(by='Proyecto', ascending=True)
-    #
-    # Si quieres 'Proyecto' de Z-A (mayor a menor para texto):
-    # df_limpio = df_limpio.sort_values(by='Proyecto', ascending=False)
-    
-    # *** ¡Ajusta las columnas y el orden (True para A-Z, False para Z-A) según tus necesidades! ***
-    # Aquí te dejo un ejemplo con 'Empresa' (A-Z) y 'Nombre/Descripcion' (Z-A):
-    df_limpio = df_limpio.sort_values(by=['Empresa', 'Nombre/Descripcion'], ascending=[True, False])
-    st.info("¡Se aplicó un ordenamiento! Asegúrate de que las columnas usadas ('Empresa', 'Nombre/Descripcion' en este ejemplo) sean las que necesitas. ¡Podés cambiarlas en el código!")
-    # -----------------------------------
+    df_limpio = df[columnas_a_conservar]
+
+    # --- LÍNEA PARA ORDENAR (¡ACTUALIZADO!) ---
+    # Ordena el DataFrame por la columna "Nombre/Descripcion" de mayor a menor (Z-A)
+    df_limpio = df_limpio.sort_values(by='Nombre/Descripcion', ascending=False)
+    st.info("✅ ¡El archivo ha sido ordenado por 'Nombre/Descripcion' de mayor a menor (Z-A)!")
+    # ------------------------------------------
 
     # Crear archivo Excel en memoria
     output = BytesIO()
