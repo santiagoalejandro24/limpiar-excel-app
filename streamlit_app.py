@@ -26,7 +26,7 @@ if archivo:
     # Filtramos solo las columnas necesarias
     df_limpio = df[columnas_a_conservar].copy()
 
-    # Eliminamos filas donde Identificador contenga letras (A-Z o a-z)
+    # Eliminamos filas donde Identificador contenga letras
     df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
     # Ordenamos por la columna "Origen" alfabéticamente
@@ -35,7 +35,26 @@ if archivo:
     # Crear archivo Excel en memoria
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df_limpio.to_excel(writer, index=False)
+        df_limpio.to_excel(writer, index=False, sheet_name='Limpio')
+
+        # Ajustar anchos de columna con más espacio
+        workbook  = writer.book
+        worksheet = writer.sheets['Limpio']
+
+        col_widths = {
+            "Guia/PLAN": 18,
+            "Origen": 25,
+            "Destino": 25,
+            "Empresa": 28,
+            "Identificador": 22,
+            "Nombre/Descripcion": 35,
+            "Proyecto": 30,
+        }
+
+        for idx, col in enumerate(df_limpio.columns):
+            width = col_widths.get(col, 20)
+            worksheet.set_column(idx, idx, width)
+
     output.seek(0)
 
     # Generar nombre con fecha actual
