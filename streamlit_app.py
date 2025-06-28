@@ -26,11 +26,8 @@ if archivo:
     # Filtramos solo las columnas necesarias
     df_limpio = df[columnas_a_conservar].copy()
 
-    # Patrón: letras y números solamente, entre 6 y 7 caracteres exactos
-    patron_6_7_alnum = r"^[A-Za-z0-9]{6,7}$"
-
-    # Eliminamos las filas que cumplen con el patrón
-    df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.match(patron_6_7_alnum)]
+    # Eliminamos filas donde Identificador contenga letras (A-Z o a-z)
+    df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
     # Ordenamos por la columna "Origen" alfabéticamente
     df_limpio = df_limpio.sort_values(by="Origen", ascending=True)
