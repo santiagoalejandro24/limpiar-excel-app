@@ -57,18 +57,18 @@ if archivo:
         df_ingresos.to_excel(writer, index=False, sheet_name='Ingresos')
         df_egresos.to_excel(writer, index=False, sheet_name='Egresos')
 
-        # Ajustar anchos de columnas en ambas hojas
+        # Ajustar anchos de columnas en ambas hojas según pedido
         workbook = writer.book
         for sheet_name, df_hoja in [("Ingresos", df_ingresos), ("Egresos", df_egresos)]:
             worksheet = writer.sheets[sheet_name]
             col_widths = {
                 "Guia/PLAN": 14,
-                "Origen": 18,
-                "Destino": 18,
-                "Empresa": 28,
+                "Origen": 14,
+                "Destino": 12,
+                "Empresa": 39,
                 "Identificador": 22,
                 "Nombre/Descripcion": 35,
-                "Proyecto": 22,
+                "Proyecto": 13,
             }
             for idx, col in enumerate(df_hoja.columns):
                 width = col_widths.get(col, 20)
