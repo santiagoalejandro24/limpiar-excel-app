@@ -12,11 +12,17 @@ archivo = st.file_uploader("📤 Subí el archivo original Excel", type=[".xlsx"
 orden_columnas = [
     "Guia/PLAN", "Origen", "Destino",
     "Nombre/Descripcion", "Identificador",
-    "Empresa", "Proyecto"
+    "Empresa",  # ← vamos a asegurarnos que sea la de columna Q
+    "Proyecto"
 ]
 
 if archivo:
     df = pd.read_excel(archivo)
+
+    # Si hay dos columnas "Empresa", nos quedamos con la de la columna Q (normalmente renombrada como Empresa.1)
+    if "Empresa.1" in df.columns:
+        df.drop(columns=["Empresa"], inplace=True)
+        df.rename(columns={"Empresa.1": "Empresa"}, inplace=True)
 
     faltantes = [col for col in orden_columnas if col not in df.columns]
     if faltantes:
@@ -105,4 +111,4 @@ if archivo:
         data=output,
         file_name=nombre_archivo,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        )
