@@ -9,27 +9,27 @@ st.write("Subí tu archivo original para generar uno limpio, separado en hojas d
 
 archivo = st.file_uploader("📤 Subí el archivo original Excel", type=[".xlsx"])
 
-orden_columnas = [
-    "Guia/PLAN", "Origen", "Destino",
-    "Nombre/Descripcion", "Identificador",
-    "Empresa",  # ← vamos a asegurarnos que sea la de columna Q
-    "Proyecto"
-]
-
 if archivo:
     df = pd.read_excel(archivo)
 
-    # Si hay dos columnas "Empresa", nos quedamos con la de la columna Q (normalmente renombrada como Empresa.1)
+    # Detectar y reemplazar correctamente la columna "Empresa"
     if "Empresa.1" in df.columns:
         df.drop(columns=["Empresa"], inplace=True)
         df.rename(columns={"Empresa.1": "Empresa"}, inplace=True)
 
-    faltantes = [col for col in orden_columnas if col not in df.columns]
+    # Columnas necesarias (usamos la Empresa real)
+    columnas_necesarias = [
+        "Guia/PLAN", "Origen", "Destino",
+        "Nombre/Descripcion", "Identificador",
+        "Empresa", "Proyecto"
+    ]
+
+    faltantes = [col for col in columnas_necesarias if col not in df.columns]
     if faltantes:
         st.error(f"Faltan columnas en el archivo original: {', '.join(faltantes)}")
         st.stop()
 
-    df_limpio = df[orden_columnas].copy()
+    df_limpio = df[columnas_necesarias].copy()
     df_limpio = df_limpio[~df_limpio["Identificador"].astype(str).str.contains(r"[A-Za-z]", na=False)]
 
     df_egresos = df_limpio[
@@ -45,6 +45,7 @@ if archivo:
     df_ingresos = df_ingresos.sort_values(by="Origen", ascending=True)
     df_egresos = df_egresos.sort_values(by="Origen", ascending=True)
 
+    # Clasificación por país
     ingresos_chile = df_ingresos[df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
     ingresos_arg = df_ingresos[~df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
 
@@ -101,7 +102,6 @@ if archivo:
 
     output.seek(0)
 
-    # Fecha del día siguiente para el nombre del archivo
     fecha_siguiente = (datetime.now() + timedelta(days=1)).strftime("%d-%m-%Y")
     nombre_archivo = f"INGRESOS-EGRESOS {fecha_siguiente}.xlsx"
 
@@ -111,4 +111,4 @@ if archivo:
         data=output,
         file_name=nombre_archivo,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    )
