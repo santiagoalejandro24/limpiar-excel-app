@@ -2,22 +2,27 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from datetime import datetime, timedelta
+
 import re
 
 st.set_page_config(page_title="Limpiar Excel - Ingresos/Egresos")
 st.title("📊 Limpiar archivo Excel de Ingresos/Egresos")
 st.write("Subí tu archivo original para generar uno limpio, separado en hojas de Ingresos, Egresos y un Resumen por país.")
 
-# Función para validar el Identificador
+# ✅ Función para validar identificadores
 def identificador_valido(valor):
     valor = str(valor).strip().upper()
-    no_validos = {"sin dato", "s/d", "n/a", "no aplica", "null", "xxx", ""}
+    
+    no_validos = {"", "s/d", "sin dato", "no aplica", "n/a", "nan", "null", "xxx"}
     if valor.lower() in no_validos:
         return False
+
     if valor.isdigit():
         return True
-    if re.fullmatch(r"[0-9]{6,}[A-Z]{1,}[0-9]{3,}", valor) and len(valor) >= 13:
+
+    if any(c.isalpha() for c in valor) and len(valor) > 9:
         return True
+
     return False
 
 archivo = st.file_uploader("📤 Subí el archivo original Excel", type=[".xlsx"])
@@ -25,7 +30,7 @@ archivo = st.file_uploader("📤 Subí el archivo original Excel", type=[".xlsx"
 if archivo:
     df = pd.read_excel(archivo)
 
-    # Si hay dos columnas "Empresa", nos quedamos con la de la columna Q
+    # ✅ Usar solo la columna Q como Empresa
     if "Empresa.1" in df.columns:
         df.drop(columns=["Empresa"], inplace=True)
         df.rename(columns={"Empresa.1": "Empresa"}, inplace=True)
@@ -43,11 +48,11 @@ if archivo:
 
     df_limpio = df[columnas_necesarias].copy()
 
-    # Filtrado de identificadores válidos
+    # ✅ Filtrar identificadores válidos
     df_limpio["Identificador"] = df_limpio["Identificador"].astype(str).str.strip()
     df_limpio = df_limpio[df_limpio["Identificador"].apply(identificador_valido)]
 
-    # Separar Ingresos y Egresos
+    # ✅ Separar Ingresos y Egresos
     df_egresos = df_limpio[
         (df_limpio["Origen"].astype(str).str.contains("Batidero", case=False, na=False)) |
         (df_limpio["Destino"].astype(str).str.contains("Guandacol", case=False, na=False))
@@ -61,7 +66,7 @@ if archivo:
     df_ingresos = df_ingresos.sort_values(by="Origen", ascending=True)
     df_egresos = df_egresos.sort_values(by="Origen", ascending=True)
 
-    # Resumen por país
+    # ✅ Resumen por país
     ingresos_chile = df_ingresos[df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
     ingresos_arg = df_ingresos[~df_ingresos["Origen"].astype(str).str.lower().str.contains("chile")]
 
@@ -74,7 +79,7 @@ if archivo:
         "Egresos": [len(egresos_chile), len(egresos_arg)]
     })
 
-    # Crear archivo Excel
+    # ✅ Crear archivo Excel con formato
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df_ingresos.to_excel(writer, index=False, sheet_name='Ingresos')
@@ -119,7 +124,6 @@ if archivo:
 
     output.seek(0)
 
-    # Nombre con la fecha del día siguiente
     fecha_siguiente = (datetime.now() + timedelta(days=1)).strftime("%d-%m-%Y")
     nombre_archivo = f"INGRESOS-EGRESOS {fecha_siguiente}.xlsx"
 
